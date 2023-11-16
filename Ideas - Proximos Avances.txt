@@ -1,0 +1,1 @@
+en un futuro quiero crear una aplicación para usuarios que se conecte a la misma base de datos en donde los usuarios podran ver el catalogo de la tienda y solicitar mas asistencia mediante whatsapp, en la pantalla de inicio saldra un QR para registrar su venta con su perfil y talvez regalar puntos.

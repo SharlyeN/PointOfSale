@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+{% block title %}crear producto{% endblock %}
+
+
+{% block contenido %}
+
+<h1>Formulario de Producto</h1>
+
+<form method="post" action="/insert_product">
+        <label for="barcode">Código de barras:</label>
+        <input type="text" id="barcode" name="barcode" required><br><br>
+
+        <label for="name_product">Nombre del producto:</label>
+        <input type="text" id="name_product" name="name_product" required><br><br>
+
+        <label for="cantidad_cajas">Cantidad de cajas:</label>
+        <input type="number" id="cantidad_cajas" name="cantidad_cajas" required><br><br>
+
+        <label for="precio_por_unidad">Precio por unidad:</label>
+        <input type="number" id="precio_por_unidad" name="precio_por_unidad" required><br><br>
+
+        <label for="precio_mayoreo">Precio al mayoreo:</label>
+        <input type="number" id="precio_mayoreo" name="precio_mayoreo" required><br><br>
+
+        <label for="tipo_de_producto">Tipo de producto:</label>
+        <input type="text" id="tipo_de_producto" name="tipo_de_producto"><br><br>
+
+        <label for="marca">Marca:</label>
+        <input type="text" id="marca" name="marca"><br><br>
+
+        <label for="unidades_por_caja">Unidades por caja:</label>
+        <input type="number" id="unidades_por_caja" name="unidades_por_caja" required><br><br>
+
+        <label for="cantidad_unidades">Cantidad de unidades:</label>
+        <input type="number" id="cantidad_unidades" name="cantidad_unidades" required><br><br>
+
+        <input type="submit" value="Enviar">
+</form>
+
+{% endblock %}

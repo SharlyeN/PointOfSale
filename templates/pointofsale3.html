@@ -1,0 +1,136 @@
+{% extends "index.html" %}
+
+{% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+{% endblock %}
+
+{% block title %}Punto de Venta{% endblock %}
+
+
+{% block contenido %}
+
+
+<label for="busqueda">Buscar por código de barras:</label>
+<input type="text" id="busqueda" name="busqueda">
+    
+<h2>Tabla de Productos</h2>
+
+<table id="tablaProductos" border="1">
+    <thead>
+        <tr>
+            <th>Barcode</th>
+            <th>Name Product</th>
+            <th>Cantidad Cajas</th>
+            <th>Precio por Unidad</th>
+            <th>Precio Mayoreo</th>
+            <th>Tipo de Producto</th>
+            <th>Marca</th>
+            <th>Unidades por Caja</th>
+            <th>Cantidad Unidades</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Aquí se agregarán las filas dinámicamente -->
+    </tbody>
+</table>
+<script>
+
+//=============================================
+//       Insertar nueva fila a la tabla
+//=============================================
+
+
+    function agregarFilaTabla(data) {
+    // Si datos es un solo objeto, conviértelo en un array de un solo elemento
+    if (!Array.isArray(data)) {
+        data = [data];
+    }
+    console.log(data)
+
+    // Itera sobre los datos y agrega una fila por cada objeto
+    for (var i = 0; i < data.length; i++) {
+        var fila = $('<tr>');
+        fila.append('<td>' + data[i].Barcode + '</td>');
+        fila.append('<td>' + data[i].name_product + '</td>');
+        fila.append('<td>' + data[i].cantidad_cajas + '</td>');
+        fila.append('<td>' + data[i].precio_por_unidad + '</td>');
+        fila.append('<td>' + data[i].precio_mayoreo + '</td>');
+        fila.append('<td>' + data[i].tipo_de_producto + '</td>');
+        fila.append('<td>' + data[i].marca + '</td>');
+        fila.append('<td>' + data[i].unidades_por_caja + '</td>');
+        fila.append('<td>' + data[i].cantidad_unidades + '</td>');
+
+        // Agrega la fila al cuerpo de la tabla
+        $('#tablaProductos tbody').append(fila);
+    }
+}
+
+    // Llamada a la función para inicializar la tabla con datos de ejemplo
+    //inicializarTabla(datosEjemplo);
+
+    
+//=============================================
+//       buscar por código de barras
+//=============================================
+$(document).ready(function(){
+    // Configurar Autocomplete
+    $('#busqueda').autocomplete({
+        source: function(request, response){
+            $.ajax({
+                url: '/buscar_barcode',
+                data: {'term': request.term},
+                success: function(data){
+                    response(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la solicitud AJAX:", error);
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui){
+            // Acciones a realizar cuando se selecciona un elemento del Autocomplete
+            console.log("Seleccionado:", ui.item.label);
+
+            // Llamar a la función para manejar y plasmar los datos en la tabla
+            //AgregarFilaTabla(ui.item.data);
+
+            // Segunda solicitud AJAX al seleccionar un elemento
+            $.ajax({
+                url: '/getall_frombarcode',
+                data: {'selectedItem': ui.item.value}, // Puedes ajustar esto según la estructura de tus datos
+                type: 'GET',
+                success: function(data){
+                    // Procesar los datos y agregarlos a la tabla
+                    agregarFilaTabla(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la segunda solicitud AJAX:", error);
+                }
+            });
+        }
+    });   
+});
+
+
+//=============================================
+//       buscar por código de barras
+//=============================================
+
+
+
+
+
+
+
+
+
+</script>
+
+
+{% endblock %}

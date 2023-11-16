@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}{% endblock %}
+    <title>{% block title %}Mi Aplicación{% endblock %}</title>
+</head>
+<body>
+    <h1>Mi Página de Inicio</h1>
+    <p>Esto sera una barra lateral.</p>
+
+    <!-- Incluye la otra plantilla usando Flask -->
+    {% block contenido %}{% endblock %}
+
+</body>
+</html>

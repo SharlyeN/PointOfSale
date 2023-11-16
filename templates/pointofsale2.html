@@ -1,0 +1,209 @@
+{% extends "index.html" %}
+
+{% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+{% endblock %}
+
+{% block title %}Punto de Venta{% endblock %}
+
+
+{% block contenido %}
+
+
+<label for="busqueda">Buscar por código de barras:</label>
+<input type="text" id="busqueda" name="busqueda">
+    
+<h2>Tabla de Productos</h2>
+
+<table id="tablaProductos" border="1">
+    <thead>
+        <tr> 
+            <th>Barcode</th>
+            <th>Name Product</th>
+            <th>Precio por Unidad</th>
+            <th>Precio Mayoreo</th>
+            <th>Cantidad Unidades</th> <!-- Unidades que se estan vendiendo  -->
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Aquí se agregarán las filas dinámicamente -->
+    </tbody>
+</table>
+<div id="totalVenta">Total de la Venta: $0.00</div>
+
+<br><br><br>
+
+
+
+<button id="btnProcesarVenta">Procesar Venta</button>
+
+
+
+<script>
+
+//=============================================
+//        Procesar Total en pantalla
+//=============================================
+function actualizarTotalVenta() {
+    var totalVenta = 0;
+
+    // Itera sobre las filas de la tabla y calcula el total
+    $('#tablaProductos tbody tr').each(function() {
+        var precioPorUnidad = parseFloat($(this).find('td:nth-child(3)').text());
+        var cantidadUnidades = parseInt($(this).find('td:nth-child(5) input').val());
+        totalVenta += precioPorUnidad * cantidadUnidades;
+    });
+
+    // Actualiza el contenido del elemento de totalVenta
+    $('#totalVenta').text('Total de la Venta: $' + totalVenta.toFixed(2));
+}
+
+//=============================================
+//       Insertar nueva fila a la tabla
+//=============================================
+
+function agregarFilaTabla(data) {
+    // Si datos es un solo objeto, conviértelo en un array de un solo elemento
+    if (!Array.isArray(data)) {
+        data = [data];
+    }
+    console.log(data)
+
+    // Itera sobre los datos y agrega una fila por cada objeto
+    for (var i = 0; i < data.length; i++) {
+        var fila = $('<tr>');
+        fila.append('<td>' + data[i].Barcode + '</td>');
+        fila.append('<td>' + data[i].name_product + '</td>');
+        fila.append('<td>' + data[i].precio_por_unidad + '</td>');
+        fila.append('<td>' + data[i].precio_mayoreo + '</td>');
+        fila.append('<td><input class="cantidad_unidades" type="number" value="1" min="1" step="1"></td>'); //Unidades que se estan vendiendo
+
+        // Agrega la fila al cuerpo de la tabla
+        $('#tablaProductos tbody').append(fila);
+
+        // Calcula y actualiza el total de la venta
+        actualizarTotalVenta(); 
+    }
+}
+
+
+$(document).on('change', '.cantidad_unidades', function() {
+    actualizarTotalVenta();
+  });
+    
+//=============================================
+//       buscar por código de barras
+//=============================================
+$(document).ready(function(){
+    // Configurar Autocomplete
+    $('#busqueda').autocomplete({
+        source: function(request, response){
+            $.ajax({
+                url: '/buscar_barcode',
+                data: {'term': request.term},
+                success: function(data){
+                    response(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la solicitud AJAX:", error);
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui){
+            // Acciones a realizar cuando se selecciona un elemento del Autocomplete
+            console.log("Seleccionado:", ui.item.label);
+
+            // Llamar a la función para manejar y plasmar los datos en la tabla
+            //AgregarFilaTabla(ui.item.data);
+
+            // Segunda solicitud AJAX al seleccionar un elemento
+            $.ajax({
+                url: '/getall_frombarcode',
+                data: {'selectedItem': ui.item.value}, // Puedes ajustar esto según la estructura de tus datos
+                type: 'GET',
+                success: function(data){
+                    // Procesar los datos y agregarlos a la tabla
+                    agregarFilaTabla(data);
+
+                    // Borrar el contenido de #busqueda
+                    $('#busqueda').val('');
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la segunda solicitud AJAX:", error);
+                }
+            });
+        }
+    });   
+});
+
+
+//=============================================
+//              PROCESAR VENTA
+//=============================================
+function obtenerDatosTabla() {
+    // Inicializar un array para almacenar los datos de la tabla
+    var total_venta = [];
+
+    // Iterar sobre las filas de la tabla
+    $('#tablaProductos tbody tr').each(function(){
+        var fila = $(this);
+        var datosFila = {};
+
+        // Obtener datos de cada celda en la fila
+        datosFila.barcode = fila.find('td:eq(0)').text();
+        datosFila.name_product = fila.find('td:eq(1)').text();
+        datosFila.cantidad_cajas = fila.find('td:eq(2)').text();
+        datosFila.precio_por_unidad = fila.find('td:eq(3)').text();
+        datosFila.precio_mayoreo = fila.find('td:eq(4)').text();
+        datosFila.cantidad_unidades = fila.find('td:eq(5)').text();
+
+        // Agregar los datos de la fila al array
+        total_venta.push(datosFila);
+    });
+
+    // Devolver el array con los datos de la tabla
+    return total_venta;
+}
+
+
+$('#btnProcesarVenta').on('click', function() {
+                // Mostrar advertencia al usuario
+                if (confirm('¿Estás seguro que quieres terminar?')) {
+                    // Obtener datos de la tabla y convertir a JSON
+                    var datosTabla = obtenerDatosTabla();
+                    var datosJSON = JSON.stringify(datosTabla);
+
+                    // Realizar la solicitud AJAX   
+                    $.ajax({
+                        url: '/registrar_venta',
+                        type: 'POST',
+                        contentType: 'application/json;charset=UTF-8',
+                        data: datosJSON,
+                        success: function(response) {
+                            console.log('Venta procesada con éxito');
+                            // Imprimir la respuesta en la consola
+                            console.log('Respuesta del servidor:', response); 
+
+
+                        },
+                        error: function(xhr, status, error, ) {
+                            console.error("Error en la solicitud AJAX:", error);
+                        }
+                    });
+                }
+            });
+
+
+
+
+
+</script>
+
+
+{% endblock %}
